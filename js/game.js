@@ -6,6 +6,95 @@ const SUITS = ['♥', '♦', '♣', '♠'];
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 const STARTING_CHIPS = 1000;
 
+// --- PREMADE PERSONALITIES ---
+const PREMADE_PERSONALITIES = [
+    {
+        name: "Aggressive Andy",
+        prompt: "Always play aggressively. Raise if you have anything decent. Bluff often and never back down from a fight."
+    },
+    {
+        name: "Cautious Carla",
+        prompt: "Be very cautious. Only play very strong hands like high pairs or better. Fold otherwise."
+    },
+    {
+        name: "Bluffing Ben",
+        prompt: "You like to bluff. If the other players seem weak (checking or folding), try to steal the pot with a bet, even with a bad hand."
+    },
+    {
+        name: "Mathematical Mike",
+        prompt: "You're a mathematician who calculates odds meticulously. Only bet when you have a statistical advantage. Fold weak hands immediately."
+    },
+    {
+        name: "Lucky Lucy",
+        prompt: "You believe in luck and intuition. Play hands that 'feel' right, even if they're not mathematically strong. Trust your gut instincts."
+    },
+    {
+        name: "Cowboy Clint",
+        prompt: "You're a gunslinger from the old west, never backing down from a fight. You raise with any pair and are known for your fearless bluffs."
+    },
+    {
+        name: "Corporate Kate",
+        prompt: "You approach poker like a business deal. Calculate risks carefully, but when you see an opportunity, strike decisively."
+    },
+    {
+        name: "Rookie Ryan",
+        prompt: "You're new to poker and tend to play too many hands. You get excited by face cards and suited connectors, often calling when you should fold."
+    },
+    {
+        name: "Veteran Victor",
+        prompt: "You've seen it all. Play a tight, disciplined game but know when to make big moves. You can read other players like a book."
+    },
+    {
+        name: "Emotional Emma",
+        prompt: "Your emotions drive your play. When winning, you get overconfident. When losing, you play too aggressively to get even."
+    },
+    {
+        name: "Silent Sam",
+        prompt: "You're the strong silent type. Play a balanced, unpredictable style. Sometimes tight, sometimes loose, keeping opponents guessing."
+    },
+    {
+        name: "Gambler Gary",
+        prompt: "You live for the thrill. Love drawing to long shots and making big bets. If there's even a small chance, you'll chase it."
+    },
+    {
+        name: "Professor Phil",
+        prompt: "You analyze every situation deeply. Consider pot odds, implied odds, and opponent tendencies before every decision."
+    },
+    {
+        name: "Wild West Wendy",
+        prompt: "You're unpredictable and chaotic. Mix up your play constantly - sometimes ultra-tight, sometimes ultra-loose. Keep everyone on their toes."
+    },
+    {
+        name: "Ice Cold Ivan",
+        prompt: "You never show emotion and play with machine-like precision. Stick to optimal strategy regardless of the situation."
+    }
+];
+
+// --- UTILITY FUNCTIONS ---
+function getRandomPersonalities() {
+    // Shuffle the array and take first 3
+    const shuffled = [...PREMADE_PERSONALITIES].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 3);
+}
+
+function setPlayerPersonalities() {
+    const randomPersonalities = getRandomPersonalities();
+    
+    // Set first 3 players with random personalities
+    for (let i = 0; i < 3; i++) {
+        const personality = randomPersonalities[i];
+        playerElements[i].nameInput.value = personality.name;
+        playerElements[i].prompt.value = personality.prompt;
+    }
+    
+    // Fourth player keeps user-defined personality or gets a default
+    if (!playerElements[3].nameInput.value.trim()) {
+        playerElements[3].nameInput.value = "Custom Player";
+    }
+    if (!playerElements[3].prompt.value.trim()) {
+        playerElements[3].prompt.value = "Play your own unique style. Be creative and unpredictable.";
+    }
+}
 // --- GAME LOGIC ---
 function createDeck() { 
     return SUITS.flatMap(suit => RANKS.map(rank => ({ suit, rank }))); 
@@ -18,11 +107,49 @@ function shuffleDeck(deck) {
     }
 }
 
+function restartGame() {
+    // Reset all game state
+    gameState = {};
+    
+    // Clear UI
+    actionLog.innerHTML = '';
+    
+    // Reset player displays
+    playerElements.forEach((el, i) => {
+        el.chips.textContent = STARTING_CHIPS;
+        el.bet.textContent = '';
+        el.cards.innerHTML = '';
+        el.area.classList.remove('active');
+        el.area.style.opacity = '1';
+    });
+    
+    // Reset community cards and pot
+    communityCardsEl.innerHTML = '';
+    potEl.textContent = '0';
+    
+    // Reset buttons
+    startGameBtn.disabled = false;
+    restartGameBtn.disabled = true;
+    nextMoveBtn.disabled = true;
+    
+    // Generate new personalities
+    setPlayerPersonalities();
+    
+    logAction("Game restarted! New personalities generated. Configure and start when ready.");
+}
+
 function startGame() {
     actionLog.innerHTML = '';
     logAction("Starting a new game...");
     startGameBtn.disabled = true;
+    restartGameBtn.disabled = false;
     nextMoveBtn.disabled = false;
+    
+    // Set random personalities if this is the first game
+    if (!gameState.players) {
+        setPlayerPersonalities();
+    }
+    
     const deck = createDeck();
     shuffleDeck(deck);
 
@@ -57,10 +184,13 @@ function startGame() {
 async function handleNextTurn() {
     if (gameState.gameOver) return;
 
+    // Show thinking animation
+    showThinkingAnimation();
     nextMoveBtn.disabled = true;
 
     if (shouldEndRound()) {
         await endRoundAndProceed();
+        hideThinkingAnimation();
         if (!gameState.gameOver) nextMoveBtn.disabled = false;
         return;
     }
@@ -69,6 +199,7 @@ async function handleNextTurn() {
 
     if (currentPlayer.hasFolded || (currentPlayer.isAllIn && currentPlayer.hasActed)) {
         moveToNextPlayer();
+        hideThinkingAnimation();
         if (!gameState.gameOver) {
             logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
             nextMoveBtn.disabled = false;
@@ -89,6 +220,7 @@ async function handleNextTurn() {
         processPlayerAction(currentPlayer, 'fold');
     }
     
+    hideThinkingAnimation();
     updateUI();
 
     const activePlayers = gameState.players.filter(p => !p.hasFolded).length;
