@@ -1,5 +1,5 @@
 // --- AI INTEGRATION ---
-async function callGeminiAPI(prompt, isJson = false) {
+async function callGeminiAPI(prompt, isJson = false, retries = 3) {
     const apiKey = apiKeyInput.value;
     if (!apiKey) throw new Error("API Key is missing.");
 
@@ -12,16 +12,36 @@ async function callGeminiAPI(prompt, isJson = false) {
     }
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     
-    if (!response.ok) {
-        const errorBody = await response.text();
-        console.error("Gemini API Error:", errorBody);
-        throw new Error(`API request failed`);
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const response = await fetch(apiUrl, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(payload),
+                signal: AbortSignal.timeout(30000) // 30 second timeout
+            });
+            
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error(`Gemini API Error (attempt ${attempt}):`, errorBody);
+                if (attempt === retries) {
+                    throw new Error(`API request failed after ${retries} attempts`);
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+                continue;
+            }
+            
+            const result = await response.json();
+            return result.candidates[0].content.parts[0].text;
+        } catch (error) {
+            console.error(`API call attempt ${attempt} failed:`, error);
+            if (attempt === retries) {
+                throw new Error(`API request failed: ${error.message}`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
     }
-    
-    const result = await response.json();
-    return result.candidates[0].content.parts[0].text;
 }
 
 function getGameStateForPrompt(player) {
@@ -56,21 +76,63 @@ async function getAIThoughtProcess(player) {
 async function getAIMove(player) {
     const gameStatePrompt = getGameStateForPrompt(player);
     const canCheck = (gameState.currentBet - player.bet) <= 0;
+    const callAmount = gameState.currentBet - player.bet;
+    const maxBet = Math.min(player.chips, gameState.currentBet + 100); // Reasonable max bet
+    
     const movePrompt = `You are a Texas Hold'em poker player. Your persona: "${player.prompt}".
     ${gameStatePrompt}
-    Available Actions: "fold", ${canCheck ? '"check", ' : ''}"call", "bet [amount]", "raise [amount]".
-    You MUST respond in JSON format with your chosen action. Example: {"action": "raise", "amount": 50} or {"action": "fold"}`;
+    
+    Available Actions:
+    - "fold" (lose your hand)
+    ${canCheck ? '- "check" (no bet, see next card)' : ''}
+    ${callAmount > 0 ? `- "call" (match bet of ${callAmount})` : ''}
+    - "bet [amount]" (bet between 1 and ${player.chips})
+    - "raise [amount]" (increase bet, min ${gameState.currentBet + 1}, max ${maxBet})
+    
+    IMPORTANT: You MUST respond in valid JSON format. Examples:
+    {"action": "fold"}
+    {"action": "check"}  
+    {"action": "call"}
+    {"action": "bet", "amount": 50}
+    {"action": "raise", "amount": 100}`;
     
     try {
         const responseText = await callGeminiAPI(movePrompt, true);
-        const move = JSON.parse(responseText);
+        let move;
+        
+        try {
+            move = JSON.parse(responseText);
+        } catch (parseError) {
+            console.warn('Failed to parse AI response, trying to extract action:', responseText);
+            // Fallback parsing for non-JSON responses
+            const lowerResponse = responseText.toLowerCase();
+            if (lowerResponse.includes('fold')) move = { action: 'fold' };
+            else if (lowerResponse.includes('check') && canCheck) move = { action: 'check' };
+            else if (lowerResponse.includes('call')) move = { action: 'call' };
+            else move = { action: canCheck ? 'check' : 'call' };
+        }
+        
+        // Validate and sanitize the move
         const validActions = ['fold', 'check', 'call', 'bet', 'raise'];
-        if (!validActions.includes(move.action)) return { action: 'fold' };
-        if ((move.action === 'bet' || move.action === 'raise') && (!move.amount || move.amount <= 0)) return { action: canCheck ? 'check' : 'call' };
+        if (!validActions.includes(move.action)) {
+            return { action: canCheck ? 'check' : 'call' };
+        }
+        
+        if ((move.action === 'bet' || move.action === 'raise')) {
+            if (!move.amount || move.amount <= 0 || move.amount > player.chips) {
+                return { action: canCheck ? 'check' : 'call' };
+            }
+            // Ensure minimum raise
+            if (move.action === 'raise' && move.amount <= gameState.currentBet) {
+                move.amount = Math.min(gameState.currentBet + 10, player.chips);
+            }
+        }
+        
         return move;
     } catch (error) {
         console.error('Error in getAIMove:', error);
-        throw new Error('Failed to get move from AI.');
+        // Safe fallback - always fold on critical errors
+        return { action: 'fold' };
     }
 }
 

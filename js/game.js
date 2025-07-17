@@ -1,6 +1,41 @@
 // --- GAME STATE ---
 let gameState = {};
 
+// Initialize side pot system
+function initializeSidePots() {
+    gameState.sidePots = [];
+    gameState.mainPot = 0;
+}
+
+function createSidePot(amount, eligiblePlayers) {
+    return {
+        amount: amount,
+        eligiblePlayers: eligiblePlayers.map(p => p.id),
+        contributors: new Set()
+    };
+}
+
+function handleAllInScenario() {
+    if (!gameState.players.some(p => p.isAllIn)) return;
+    
+    // Sort players by chips contributed (for side pot calculation)
+    const activePlayers = gameState.players.filter(p => !p.hasFolded);
+    const sortedByContribution = activePlayers.sort((a, b) => a.bet - b.bet);
+    
+    let lastContribution = 0;
+    gameState.sidePots = [];
+    
+    for (let i = 0; i < sortedByContribution.length; i++) {
+        const currentContribution = sortedByContribution[i].bet;
+        if (currentContribution > lastContribution) {
+            const potAmount = (currentContribution - lastContribution) * (sortedByContribution.length - i);
+            const eligiblePlayers = sortedByContribution.slice(i);
+            gameState.sidePots.push(createSidePot(potAmount, eligiblePlayers));
+            lastContribution = currentContribution;
+        }
+    }
+}
+
 // --- CONSTANTS ---
 const SUITS = ['♥', '♦', '♣', '♠'];
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
@@ -171,6 +206,7 @@ function startGame() {
         })),
         communityCards: [],
         pot: 0,
+        sidePots: [],
         currentPlayerIndex: 0,
         currentBet: 0,
         gamePhase: 'pre-flop',
@@ -308,6 +344,11 @@ function dealCommunityCards(count) {
 }
 
 function collectBets() {
+    // Handle side pots if there are all-in players
+    if (gameState.players.some(p => p.isAllIn)) {
+        handleAllInScenario();
+    }
+    
     gameState.players.forEach(player => {
         gameState.pot += player.bet;
         player.bet = 0;
