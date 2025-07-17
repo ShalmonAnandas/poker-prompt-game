@@ -101,9 +101,12 @@ function createDeck() {
 }
 
 function shuffleDeck(deck) {
-    for (let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
+    // Fisher-Yates shuffle with multiple passes for better randomization
+    for (let pass = 0; pass < 3; pass++) {
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
     }
 }
 
@@ -188,65 +191,83 @@ async function handleNextTurn() {
     showThinkingAnimation();
     nextMoveBtn.disabled = true;
 
-    if (shouldEndRound()) {
-        await endRoundAndProceed();
-        hideThinkingAnimation();
-        if (!gameState.gameOver) nextMoveBtn.disabled = false;
-        return;
-    }
-
-    let currentPlayer = gameState.players[gameState.currentPlayerIndex];
-
-    if (currentPlayer.hasFolded || (currentPlayer.isAllIn && currentPlayer.hasActed)) {
-        moveToNextPlayer();
-        hideThinkingAnimation();
-        if (!gameState.gameOver) {
-            logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
-            nextMoveBtn.disabled = false;
-        }
-        return;
-    }
-    
-    updateUI();
-    
     try {
-        const thought = await getAIThoughtProcess(currentPlayer);
-        logAction(`${currentPlayer.name} thinks: "${thought}"`, 'thinking');
+        if (shouldEndRound()) {
+            await endRoundAndProceed();
+            hideThinkingAnimation();
+            if (!gameState.gameOver) nextMoveBtn.disabled = false;
+            return;
+        }
 
-        const move = await getAIMove(currentPlayer);
-        processPlayerAction(currentPlayer, move.action, move.amount);
+        let currentPlayer = gameState.players[gameState.currentPlayerIndex];
+
+        if (currentPlayer.hasFolded || (currentPlayer.isAllIn && currentPlayer.hasActed)) {
+            moveToNextPlayer();
+            hideThinkingAnimation();
+            if (!gameState.gameOver) {
+                logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
+                nextMoveBtn.disabled = false;
+            }
+            return;
+        }
+        
+        updateUI();
+        
+        try {
+            const thought = await getAIThoughtProcess(currentPlayer);
+            logAction(`${currentPlayer.name} thinks: "${thought}"`, 'thinking');
+
+            const move = await getAIMove(currentPlayer);
+            processPlayerAction(currentPlayer, move.action, move.amount);
+        } catch (error) {
+            logAction(`Error for ${currentPlayer.name}: ${error.message}. Folding.`);
+            processPlayerAction(currentPlayer, 'fold');
+        }
+        
+        hideThinkingAnimation();
+        updateUI();
+
+        const activePlayers = gameState.players.filter(p => !p.hasFolded).length;
+        if (activePlayers <= 1) {
+            await endRoundByFold();
+            return;
+        }
+        
+        moveToNextPlayer();
+
+        if (!gameState.gameOver) {
+             if(shouldEndRound()){
+                logAction("Betting round is over. Click 'Next AI Move' to deal cards.", 'analysis');
+             } else {
+                logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
+             }
+             nextMoveBtn.disabled = false;
+        }
     } catch (error) {
-        logAction(`Error for ${currentPlayer.name}: ${error.message}. Folding.`);
-        processPlayerAction(currentPlayer, 'fold');
-    }
-    
-    hideThinkingAnimation();
-    updateUI();
-
-    const activePlayers = gameState.players.filter(p => !p.hasFolded).length;
-    if (activePlayers <= 1) {
-        await endRoundByFold();
-        return;
-    }
-    
-    moveToNextPlayer();
-
-    if (!gameState.gameOver) {
-         if(shouldEndRound()){
-            logAction("Betting round is over. Click 'Next AI Move' to deal cards.", 'analysis');
-         } else {
-            logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
-         }
-         nextMoveBtn.disabled = false;
+        hideThinkingAnimation();
+        logAction(`Critical error: ${error.message}. Restarting game.`, 'analysis');
+        setTimeout(() => restartGame(), 2000);
     }
 }
 
 function moveToNextPlayer() {
     let attempts = 0;
+    const maxAttempts = gameState.players.length * 2; // Prevent infinite loops
+    
     do {
         gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
         attempts++;
-    } while ((gameState.players[gameState.currentPlayerIndex].hasFolded || (gameState.players[gameState.currentPlayerIndex].isAllIn && attempts < gameState.players.length * 2)))
+        
+        // Safety check to prevent infinite loops
+        if (attempts >= maxAttempts) {
+            logAction("Error: Unable to find next player. Ending round.", 'analysis');
+            gameState.gamePhase = 'showdown';
+            return;
+        }
+    } while ((gameState.players[gameState.currentPlayerIndex].hasFolded || 
+              (gameState.players[gameState.currentPlayerIndex].isAllIn && 
+               gameState.players[gameState.currentPlayerIndex].hasActed)) && 
+               attempts < maxAttempts);
 }
 
 function shouldEndRound() {
@@ -291,6 +312,8 @@ function collectBets() {
         gameState.pot += player.bet;
         player.bet = 0;
     });
+    // Animate pot increase
+    animatePotIncrease();
 }
 
 async function handleShowdown() {
@@ -301,42 +324,183 @@ async function handleShowdown() {
     const winnerName = winner ? winner.name : "No one (tie)";
     
     if (winner) {
-        logAction(`${winner.name} wins the pot of ${gameState.pot}!`);
+        const handInfo = gameState.winningHand ? ` with ${gameState.winningHand.name}` : "";
+        logAction(`${winner.name} wins the pot of ${gameState.pot}${handInfo}!`);
         winner.chips += gameState.pot;
+        
+        // Highlight the winner
+        const winnerIndex = gameState.players.findIndex(p => p.id === winner.id);
+        if (winnerIndex !== -1) {
+            highlightWinner(winnerIndex);
+        }
     } else {
         logAction("It's a tie! The pot is split.");
         const activePlayers = gameState.players.filter(p => !p.hasFolded);
         const potPerPlayer = Math.floor(gameState.pot / activePlayers.length);
         activePlayers.forEach(p => p.chips += potPerPlayer);
     }
+    
+    // Show all player hands in showdown
+    const contenders = gameState.players.filter(p => !p.hasFolded);
+    contenders.forEach(player => {
+        const hand = evaluateHand(player.cards, gameState.communityCards);
+        logAction(`${player.name} shows: ${hand.name}`, 'analysis');
+    });
+    
     gameState.gameOver = true;
     nextMoveBtn.disabled = true;
     startGameBtn.disabled = false;
+    updateUI();
 }
 
 function determineWinner() {
-    const cardValue = (card) => RANKS.indexOf(card.rank);
-    const handValue = (cards) => {
-        if (!cards || cards.length === 0) return -1;
-        return Math.max(...cards.map(cardValue));
-    }
     const contenders = gameState.players.filter(p => !p.hasFolded);
     if (contenders.length === 0) return null;
     if (contenders.length === 1) return contenders[0];
     
-    let bestHandValue = -1;
-    let winners = [];
-
-    for(const player of contenders) {
-        const value = handValue(player.cards);
-        if (value > bestHandValue) {
-            bestHandValue = value;
-            winners = [player];
-        } else if (value === bestHandValue) {
-            winners.push(player);
+    // Evaluate all hands
+    const evaluatedHands = contenders.map(player => ({
+        player: player,
+        hand: evaluateHand(player.cards, gameState.communityCards)
+    }));
+    
+    // Find the best hand(s)
+    let bestHands = [evaluatedHands[0]];
+    
+    for (let i = 1; i < evaluatedHands.length; i++) {
+        const comparison = compareHands(evaluatedHands[i].hand, bestHands[0].hand);
+        if (comparison > 0) {
+            bestHands = [evaluatedHands[i]];
+        } else if (comparison === 0) {
+            bestHands.push(evaluatedHands[i]);
         }
     }
-    return winners.length === 1 ? winners[0] : null;
+    
+    // Store winning hand info for display
+    gameState.winningHand = bestHands[0].hand;
+    
+    return bestHands.length === 1 ? bestHands[0].player : null;
+}
+function getCardValue(rank) {
+    return RANKS.indexOf(rank);
+}
+
+function evaluateHand(holeCards, communityCards) {
+    const allCards = [...holeCards, ...communityCards];
+    const sortedCards = allCards.sort((a, b) => getCardValue(b.rank) - getCardValue(a.rank));
+    
+    // Count ranks and suits
+    const rankCounts = {};
+    const suitCounts = {};
+    
+    sortedCards.forEach(card => {
+        rankCounts[card.rank] = (rankCounts[card.rank] || 0) + 1;
+        suitCounts[card.suit] = (suitCounts[card.suit] || 0) + 1;
+    });
+    
+    const ranks = Object.keys(rankCounts).sort((a, b) => getCardValue(b) - getCardValue(a));
+    const counts = Object.values(rankCounts).sort((a, b) => b - a);
+    const isFlush = Object.values(suitCounts).some(count => count >= 5);
+    
+    // Check for straight
+    let isStraight = false;
+    let straightHigh = -1;
+    
+    // Check for regular straight
+    for (let i = 0; i <= ranks.length - 5; i++) {
+        let consecutive = true;
+        for (let j = 0; j < 4; j++) {
+            if (getCardValue(ranks[i + j]) - getCardValue(ranks[i + j + 1]) !== 1) {
+                consecutive = false;
+                break;
+            }
+        }
+        if (consecutive) {
+            isStraight = true;
+            straightHigh = getCardValue(ranks[i]);
+            break;
+        }
+    }
+    
+    // Check for A-2-3-4-5 straight (wheel)
+    if (!isStraight && ranks.includes('A') && ranks.includes('2') && ranks.includes('3') && ranks.includes('4') && ranks.includes('5')) {
+        isStraight = true;
+        straightHigh = 3; // 5-high straight
+    }
+    
+    // Determine hand rank (higher number = better hand)
+    let handRank = 0;
+    let handName = "";
+    let kickers = [];
+    
+    if (isStraight && isFlush) {
+        handRank = 8;
+        handName = "Straight Flush";
+        kickers = [straightHigh];
+    } else if (counts[0] === 4) {
+        handRank = 7;
+        handName = "Four of a Kind";
+        const quadRank = Object.keys(rankCounts).find(rank => rankCounts[rank] === 4);
+        kickers = [getCardValue(quadRank)];
+    } else if (counts[0] === 3 && counts[1] === 2) {
+        handRank = 6;
+        handName = "Full House";
+        const tripRank = Object.keys(rankCounts).find(rank => rankCounts[rank] === 3);
+        const pairRank = Object.keys(rankCounts).find(rank => rankCounts[rank] === 2);
+        kickers = [getCardValue(tripRank), getCardValue(pairRank)];
+    } else if (isFlush) {
+        handRank = 5;
+        handName = "Flush";
+        kickers = ranks.slice(0, 5).map(rank => getCardValue(rank));
+    } else if (isStraight) {
+        handRank = 4;
+        handName = "Straight";
+        kickers = [straightHigh];
+    } else if (counts[0] === 3) {
+        handRank = 3;
+        handName = "Three of a Kind";
+        const tripRank = Object.keys(rankCounts).find(rank => rankCounts[rank] === 3);
+        kickers = [getCardValue(tripRank)];
+    } else if (counts[0] === 2 && counts[1] === 2) {
+        handRank = 2;
+        handName = "Two Pair";
+        const pairs = Object.keys(rankCounts).filter(rank => rankCounts[rank] === 2)
+            .map(rank => getCardValue(rank)).sort((a, b) => b - a);
+        kickers = pairs;
+    } else if (counts[0] === 2) {
+        handRank = 1;
+        handName = "One Pair";
+        const pairRank = Object.keys(rankCounts).find(rank => rankCounts[rank] === 2);
+        kickers = [getCardValue(pairRank)];
+    } else {
+        handRank = 0;
+        handName = "High Card";
+        kickers = ranks.slice(0, 5).map(rank => getCardValue(rank));
+    }
+    
+    return {
+        rank: handRank,
+        name: handName,
+        kickers: kickers,
+        cards: sortedCards.slice(0, 5)
+    };
+}
+
+function compareHands(hand1, hand2) {
+    if (hand1.rank !== hand2.rank) {
+        return hand1.rank - hand2.rank;
+    }
+    
+    // Same hand rank, compare kickers
+    for (let i = 0; i < Math.max(hand1.kickers.length, hand2.kickers.length); i++) {
+        const kicker1 = hand1.kickers[i] || -1;
+        const kicker2 = hand2.kickers[i] || -1;
+        if (kicker1 !== kicker2) {
+            return kicker1 - kicker2;
+        }
+    }
+    
+    return 0; // Tie
 }
 
 function processPlayerAction(player, action, amount = 0) {

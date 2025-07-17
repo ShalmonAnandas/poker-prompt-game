@@ -162,3 +162,68 @@ body {
         transform: scale(1);
     }
 }
+
+/* Card dealing animation */
+@keyframes cardDeal {
+    from {
+        transform: translateY(-50px) scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.card-enter {
+    animation: cardDeal 0.5s ease-out;
+}
+
+/* Chip animation */
+@keyframes chipMove {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.chip-animation {
+    animation: chipMove 0.3s ease-in-out;
+}
+
+/* Winner highlight */
+@keyframes winnerGlow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    }
+}
+
+.winner-highlight {
+    animation: winnerGlow 1s ease-in-out infinite;
+    border-color: #ffd700 !important;
+}
+
+/* Pot highlight when chips are added */
+@keyframes potGrow {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.pot-grow {
+    animation: potGrow 0.4s ease-in-out;
+}
