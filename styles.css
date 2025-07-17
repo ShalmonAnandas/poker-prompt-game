@@ -1,0 +1,154 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #1a202c;
+}
+
+.poker-table {
+    background-color: #2d3748;
+    border: 10px solid #4a5568;
+    border-radius: 50%;
+    position: relative;
+    aspect-ratio: 1 / 0.7;
+    min-height: 500px;
+}
+
+.player-area {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 280px;
+}
+
+.player-area-bottom { 
+    top: 90%; 
+    left: 50%; 
+}
+
+.player-area-top { 
+    top: 10%; 
+    left: 50%; 
+}
+
+.player-area-left { 
+    top: 50%; 
+    left: 18%; 
+    transform: translate(-50%, -50%) rotate(90deg); 
+}
+
+.player-area-right { 
+    top: 50%; 
+    left: 82%; 
+    transform: translate(-50%, -50%) rotate(-90deg); 
+}
+
+.card {
+    width: 70px;
+    height: 100px;
+    border-radius: 6px;
+    background-color: white;
+    border: 1px solid #cbd5e0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.card.red { 
+    color: #e53e3e; 
+}
+
+.card.black { 
+    color: #2d3748; 
+}
+
+.card-suit { 
+    font-size: 1rem; 
+    line-height: 1; 
+}
+
+.player-area.active {
+    border-color: #f6e05e;
+    box-shadow: 0 0 15px rgba(246, 224, 94, 0.5);
+}
+
+.chip-stack { 
+    background-color: #4a5568; 
+}
+
+.pot-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0,0,0,0.2);
+    padding: 1rem 1.5rem;
+    border-radius: 20px;
+}
+
+.action-log {
+    height: 400px;
+    background-color: rgba(0,0,0,0.3);
+}
+
+.log-action { 
+    color: #ffffff; 
+}
+
+.log-thinking { 
+    color: #a0aec0; 
+    font-style: italic; 
+    padding-left: 1rem; 
+    border-left: 2px solid #4a5568; 
+    margin-top: 4px; 
+    margin-bottom: 8px;
+}
+
+.log-analysis { 
+    color: #f6e05e; 
+    font-style: italic; 
+    padding-left: 1rem; 
+    border-left: 2px solid #f6e05e; 
+    margin-top: 8px; 
+    margin-bottom: 8px;
+}
+
+.player-prompt-area {
+    background-color: #2d3748;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .poker-table {
+        min-height: 400px;
+    }
+    
+    .action-log {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .poker-table {
+        min-height: 350px;
+    }
+    
+    .player-area {
+        width: 200px;
+    }
+    
+    .card {
+        width: 50px;
+        height: 70px;
+        font-size: 1rem;
+    }
+    
+    .action-log {
+        height: 250px;
+    }
+}

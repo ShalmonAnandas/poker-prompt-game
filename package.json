@@ -1,0 +1,29 @@
+{
+  "name": "prompt-poker-ai",
+  "version": "1.0.0",
+  "description": "A Texas Hold'em poker game with AI players powered by Google Gemini",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Static site - no build needed'",
+    "start": "python -m http.server 8000"
+  },
+  "keywords": [
+    "poker",
+    "ai",
+    "gemini",
+    "texas-holdem",
+    "javascript",
+    "game"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/prompt-poker-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/prompt-poker-ai/issues"
+  },
+  "homepage": "https://github.com/your-username/prompt-poker-ai#readme"
+}

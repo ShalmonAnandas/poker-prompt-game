@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Poker AI POC (Player Thinking)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="text-gray-200">
+    <div class="container mx-auto p-4 max-w-7xl">
+        <header class="text-center mb-4">
+            <h1 class="text-4xl font-bold text-white">Prompt Poker AI</h1>
+            <p class="text-gray-400">4-Player with Player Thinking</p>
+        </header>
+
+        <div class="mb-6 max-w-lg mx-auto">
+            <label for="apiKey" class="block mb-2 text-sm font-medium text-gray-300">Gemini API Key</label>
+            <div class="flex">
+                <input type="password" id="apiKey" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-l-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Enter your Gemini API Key here">
+                <button id="toggleApiVisibility" class="bg-gray-600 hover:bg-gray-500 text-white font-bold p-2.5 rounded-r-lg">Show</button>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Poker Table -->
+            <div class="lg:col-span-3">
+                <div id="pokerTable" class="poker-table w-full max-w-4xl mx-auto">
+                    <!-- Player Areas -->
+                    <div id="player-area-0" class="player-area player-area-bottom bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div id="player-0-cards" class="flex gap-2"></div>
+                            <div class="text-center">
+                                <h3 id="player-0-name" class="text-lg font-semibold">Player 1</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-0-chips">1000</span></div>
+                                <div id="player-0-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="player-area-1" class="player-area player-area-left bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div id="player-1-cards" class="flex gap-2"></div>
+                            <div class="text-center">
+                                <h3 id="player-1-name" class="text-lg font-semibold">Player 2</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-1-chips">1000</span></div>
+                                <div id="player-1-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="player-area-2" class="player-area player-area-top bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="text-center">
+                                <h3 id="player-2-name" class="text-lg font-semibold">Player 3</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-2-chips">1000</span></div>
+                                <div id="player-2-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
+                            <div id="player-2-cards" class="flex gap-2"></div>
+                        </div>
+                    </div>
+                    <div id="player-area-3" class="player-area player-area-right bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="text-center">
+                                <h3 id="player-3-name" class="text-lg font-semibold">Player 4</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-3-chips">1000</span></div>
+                                <div id="player-3-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
+                             <div id="player-3-cards" class="flex gap-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Community Area -->
+                    <div class="pot-area text-center">
+                        <h4 class="text-2xl font-bold text-yellow-300">Pot: <span id="pot">0</span></h4>
+                        <div id="community-cards" class="flex gap-2 mt-2 justify-center"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Controls and Action Log -->
+            <div class="lg:col-span-1">
+                <div class="bg-gray-800 p-4 rounded-lg h-full">
+                    <h3 class="text-xl font-bold mb-3 text-white">Game Controls</h3>
+                    <div class="flex flex-col gap-2 mb-6">
+                        <button id="startGameBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Start New Game</button>
+                        <button id="nextMoveBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors" disabled>Next AI Move</button>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-white">Action Log</h3>
+                    <div id="actionLog" class="action-log p-2 rounded-lg border border-gray-600 overflow-y-auto text-sm">
+                        Welcome! Configure player names & prompts, then start the game.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Prompts -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Player 1 Prompt -->
+            <div class="player-prompt-area">
+                <label class="block text-white text-sm font-bold mb-2">Player 1 Name</label>
+                <input type="text" id="player-0-name-input" value="Aggressive Andy" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
+                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
+                <textarea id="player-0-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">Always play aggressively. Raise if you have anything decent. Bluff often.</textarea>
+                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="0">✨ Generate</button>
+            </div>
+            <!-- Player 2 Prompt -->
+            <div class="player-prompt-area">
+                <label class="block text-white text-sm font-bold mb-2">Player 2 Name</label>
+                <input type="text" id="player-1-name-input" value="Cautious Carla" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
+                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
+                <textarea id="player-1-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">Be very cautious. Only play very strong hands like high pairs or better. Fold otherwise.</textarea>
+                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="1">✨ Generate</button>
+            </div>
+            <!-- Player 3 Prompt -->
+            <div class="player-prompt-area">
+                <label class="block text-white text-sm font-bold mb-2">Player 3 Name</label>
+                <input type="text" id="player-2-name-input" value="Bluffing Ben" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
+                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
+                <textarea id="player-2-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">You like to bluff. If the other players seem weak (checking or folding), try to steal the pot with a bet, even with a bad hand.</textarea>
+                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="2">✨ Generate</button>
+            </div>
+            <!-- Player 4 Prompt -->
+            <div class="player-prompt-area">
+                <label class="block text-white text-sm font-bold mb-2">Player 4 Name</label>
+                <input type="text" id="player-3-name-input" value="Thinking Tina" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
+                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
+                <textarea id="player-3-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">Play a balanced 'tight-aggressive' style. Play a narrow range of strong starting hands, but play them aggressively with bets and raises.</textarea>
+                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="3">✨ Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
