@@ -84,7 +84,18 @@
                     <h3 class="text-xl font-bold mb-3 text-white">Game Controls</h3>
                     <div class="flex flex-col gap-2 mb-6">
                         <button id="startGameBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Start New Game</button>
-                        <button id="nextMoveBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors" disabled>Next AI Move</button>
+                        <button id="restartGameBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors" disabled>Restart Game</button>
+                        <button id="nextMoveBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors relative overflow-hidden" disabled>
+                            <span id="nextMoveText">Next AI Move</span>
+                            <div id="thinkingAnimation" class="absolute inset-0 flex items-center justify-center bg-blue-600 hidden">
+                                <div class="flex space-x-1">
+                                    <div class="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                    <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                </div>
+                                <span class="ml-2 text-white">Thinking...</span>
+                            </div>
+                        </button>
                     </div>
                     <h3 class="text-xl font-bold mb-3 text-white">Action Log</h3>
                     <div id="actionLog" class="action-log p-2 rounded-lg border border-gray-600 overflow-y-auto text-sm">
