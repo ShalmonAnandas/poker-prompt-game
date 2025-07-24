@@ -108,27 +108,27 @@ const PREMADE_PERSONALITIES = [
 
 // --- UTILITY FUNCTIONS ---
 function getRandomPersonalities() {
-    // Shuffle the array and take first 3
+    // Shuffle the array and take first 7 for 8-player game
     const shuffled = [...PREMADE_PERSONALITIES].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 3);
+    return shuffled.slice(0, 7);
 }
 
 function setPlayerPersonalities() {
     const randomPersonalities = getRandomPersonalities();
     
-    // Set first 3 players with random personalities
-    for (let i = 0; i < 3; i++) {
+    // Set first 7 players with random personalities
+    for (let i = 0; i < 7; i++) {
         const personality = randomPersonalities[i];
         playerElements[i].nameInput.value = personality.name;
         playerElements[i].prompt.value = personality.prompt;
     }
     
-    // Fourth player keeps user-defined personality or gets a default
-    if (!playerElements[3].nameInput.value.trim()) {
-        playerElements[3].nameInput.value = "Custom Player";
+    // Eighth player keeps user-defined personality or gets a default
+    if (!playerElements[7].nameInput.value.trim()) {
+        playerElements[7].nameInput.value = "Custom Player";
     }
-    if (!playerElements[3].prompt.value.trim()) {
-        playerElements[3].prompt.value = "Play your own unique style. Be creative and unpredictable.";
+    if (!playerElements[7].prompt.value.trim()) {
+        playerElements[7].prompt.value = "Play your own unique style. Be creative and unpredictable.";
     }
     
     personalitiesInitialized = true;

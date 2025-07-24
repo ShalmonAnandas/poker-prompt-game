@@ -32,26 +32,45 @@ body {
     transform: translate(-50%, -50%) scale(1.02);
 }
 
-.player-area-bottom { 
+/* 8-Player Circular Positioning */
+.player-area-position-0 { 
     top: 90%; 
     left: 50%; 
 }
 
-.player-area-top { 
+.player-area-position-1 { 
+    top: 82%; 
+    left: 82%; 
+}
+
+.player-area-position-2 { 
+    top: 50%; 
+    left: 90%; 
+}
+
+.player-area-position-3 { 
+    top: 18%; 
+    left: 82%; 
+}
+
+.player-area-position-4 { 
     top: 10%; 
     left: 50%; 
 }
 
-.player-area-left { 
-    top: 50%; 
+.player-area-position-5 { 
+    top: 18%; 
     left: 18%; 
-    transform: translate(-50%, -50%) rotate(90deg); 
 }
 
-.player-area-right { 
+.player-area-position-6 { 
     top: 50%; 
-    left: 82%; 
-    transform: translate(-50%, -50%) rotate(-90deg); 
+    left: 10%; 
+}
+
+.player-area-position-7 { 
+    top: 82%; 
+    left: 18%; 
 }
 
 .card {

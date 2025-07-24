@@ -10,7 +10,7 @@ const actionLog = document.getElementById('actionLog');
 const potEl = document.getElementById('pot');
 const communityCardsEl = document.getElementById('community-cards');
 
-const playerElements = Array.from({ length: 4 }, (_, i) => ({
+const playerElements = Array.from({ length: 8 }, (_, i) => ({
     area: document.getElementById(`player-area-${i}`),
     cards: document.getElementById(`player-${i}-cards`),
     chips: document.getElementById(`player-${i}-chips`),
