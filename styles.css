@@ -10,7 +10,7 @@ body {
     border-radius: 50%;
     position: relative;
     aspect-ratio: 1 / 0.7;
-    min-height: 500px;
+    min-height: 700px;
     box-shadow: 
         0 20px 40px rgba(0,0,0,0.3),
         inset 0 4px 8px rgba(255,255,255,0.1);
@@ -19,7 +19,7 @@ body {
 .player-area {
     position: absolute;
     transform: translate(-50%, -50%);
-    width: 280px;
+    width: 220px;
     backdrop-filter: blur(10px);
     background: rgba(17, 24, 39, 0.8);
     border: 2px solid rgba(75, 85, 99, 0.6);
@@ -77,43 +77,43 @@ body {
 
 /* 8-Player Circular Positioning - Adjusted for better visibility */
 .player-area-position-0 { 
-    top: 85%; 
+    top: 80%; 
     left: 50%; 
 }
 
 .player-area-position-1 { 
-    top: 78%; 
-    left: 78%; 
+    top: 75%; 
+    left: 75%; 
 }
 
 .player-area-position-2 { 
     top: 50%; 
-    left: 85%; 
+    left: 82%; 
 }
 
 .player-area-position-3 { 
-    top: 22%; 
-    left: 78%; 
+    top: 25%; 
+    left: 75%; 
 }
 
 .player-area-position-4 { 
-    top: 15%; 
+    top: 20%; 
     left: 50%; 
 }
 
 .player-area-position-5 { 
-    top: 22%; 
-    left: 22%; 
+    top: 25%; 
+    left: 25%; 
 }
 
 .player-area-position-6 { 
     top: 50%; 
-    left: 15%; 
+    left: 18%; 
 }
 
 .player-area-position-7 { 
-    top: 78%; 
-    left: 22%; 
+    top: 75%; 
+    left: 25%; 
 }
 
 .card {
@@ -370,7 +370,7 @@ button:active {
 /* Enhanced responsive design */
 @media (max-width: 1200px) {
     .player-area {
-        width: 240px;
+        width: 200px;
     }
     
     .card {
@@ -382,7 +382,7 @@ button:active {
 
 @media (max-width: 1024px) {
     .poker-table {
-        min-height: 400px;
+        min-height: 600px;
         border-width: 8px;
     }
     
@@ -397,12 +397,12 @@ button:active {
 
 @media (max-width: 768px) {
     .poker-table {
-        min-height: 350px;
+        min-height: 500px;
         border-width: 6px;
     }
     
     .player-area {
-        width: 200px;
+        width: 180px;
     }
     
     .card {
@@ -428,7 +428,7 @@ button:active {
 
 @media (max-width: 640px) {
     .player-area {
-        width: 160px;
+        width: 140px;
     }
     
     .card {

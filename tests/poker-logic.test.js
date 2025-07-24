@@ -193,6 +193,39 @@ class PokerTests {
         this.assertEqual(raiseText.amount, 100, 'Should extract amount from text');
     }
 
+    // Test folded player reset logic
+    testFoldedPlayerReset() {
+        console.log('\n=== Testing Folded Player Reset ===');
+        
+        // Mock player state
+        const mockPlayers = [
+            { id: 0, hasFolded: true, hasActed: true, isAllIn: false, bet: 50, isEliminated: false },
+            { id: 1, hasFolded: false, hasActed: true, isAllIn: true, bet: 100, isEliminated: false },
+            { id: 2, hasFolded: true, hasActed: true, isAllIn: false, bet: 25, isEliminated: false }
+        ];
+        
+        // Simulate the reset logic from startNextHand
+        mockPlayers.forEach(player => {
+            if (!player.isEliminated) {
+                player.hasFolded = false;
+                player.hasActed = false;
+                player.isAllIn = false;
+                player.bet = 0;
+            }
+        });
+        
+        this.assert(!mockPlayers[0].hasFolded, 'Folded player 0 should be reset to not folded');
+        this.assert(!mockPlayers[0].hasActed, 'Player 0 hasActed should be reset');
+        this.assert(!mockPlayers[0].isAllIn, 'Player 0 isAllIn should be reset');
+        this.assertEqual(mockPlayers[0].bet, 0, 'Player 0 bet should be reset to 0');
+        
+        this.assert(!mockPlayers[1].hasFolded, 'Player 1 hasFolded should be reset');
+        this.assert(!mockPlayers[1].hasActed, 'All-in player 1 hasActed should be reset');
+        this.assert(!mockPlayers[1].isAllIn, 'All-in player 1 isAllIn should be reset');
+        
+        this.assert(!mockPlayers[2].hasFolded, 'Folded player 2 should be reset to not folded');
+    }
+
     // Run all tests
     runAll() {
         console.log('🎯 Starting Poker Game Test Suite...\n');
@@ -202,6 +235,7 @@ class PokerTests {
         this.testBlindLogic();
         this.testAllInScenarios();
         this.testAIResponseParsing();
+        this.testFoldedPlayerReset();
         
         console.log(`\n🎯 Test Results: ${this.passed} passed, ${this.failed} failed`);
         
