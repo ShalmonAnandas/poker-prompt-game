@@ -1,6 +1,11 @@
 // --- GAME STATE ---
 let gameState = {};
 let personalitiesInitialized = false;
+let tournamentState = {
+    inProgress: false,
+    handNumber: 0,
+    eliminatedPlayers: []
+};
 
 // Initialize side pot system
 function initializeSidePots() {
@@ -154,9 +159,102 @@ function shuffleDeck(deck) {
     }
 }
 
+function startNextHand() {
+    if (!tournamentState.inProgress) return;
+    
+    // Check for eliminated players (0 chips)
+    const eliminatedThisHand = gameState.players.filter(p => p.chips <= 0 && !p.isEliminated);
+    eliminatedThisHand.forEach(player => {
+        player.isEliminated = true;
+        tournamentState.eliminatedPlayers.push(player.name);
+        logAction(`${player.name} has been eliminated from the tournament!`, 'analysis');
+    });
+    
+    // Get remaining active players
+    const activePlayers = gameState.players.filter(p => !p.isEliminated);
+    
+    // Check for tournament winner
+    if (activePlayers.length <= 1) {
+        endTournament(activePlayers[0]);
+        return;
+    }
+    
+    // Start next hand
+    tournamentState.handNumber++;
+    const deck = createDeck();
+    shuffleDeck(deck);
+    
+    // Reset hand-specific state for active players
+    gameState.players.forEach(player => {
+        if (!player.isEliminated) {
+            player.cards = [deck.pop(), deck.pop()];
+            player.bet = 0;
+            player.hasActed = false;
+            player.isAllIn = false;
+            player.hasFolded = false;
+        } else {
+            player.cards = [];
+        }
+    });
+    
+    // Reset game state for new hand
+    gameState.deck = deck;
+    gameState.communityCards = [];
+    gameState.pot = 0;
+    gameState.sidePots = [];
+    gameState.currentPlayerIndex = 0;
+    gameState.currentBet = 0;
+    gameState.gamePhase = 'pre-flop';
+    gameState.gameOver = false;
+    
+    // Find first active player to start
+    while (gameState.players[gameState.currentPlayerIndex].isEliminated) {
+        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+    }
+    
+    logAction(`Hand ${tournamentState.handNumber} begins! ${activePlayers.length} players remaining.`, 'analysis');
+    logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
+    
+    // Update button states
+    nextHandBtn.disabled = true;
+    nextMoveBtn.disabled = false;
+    
+    updateUI();
+}
+
+function endTournament(winner) {
+    tournamentState.inProgress = false;
+    
+    if (winner) {
+        logAction(`🏆 TOURNAMENT WINNER: ${winner.name}! 🏆`, 'analysis');
+        logAction(`Tournament completed after ${tournamentState.handNumber} hands.`, 'analysis');
+        
+        // Highlight the winner
+        const winnerIndex = gameState.players.findIndex(p => p.id === winner.id);
+        if (winnerIndex !== -1) {
+            highlightWinner(winnerIndex);
+        }
+    } else {
+        logAction("Tournament ended with no clear winner.", 'analysis');
+    }
+    
+    // Reset button states
+    gameState.gameOver = true;
+    nextHandBtn.disabled = true;
+    nextMoveBtn.disabled = true;
+    startGameBtn.disabled = false;
+    
+    updateUI();
+}
+
 function restartGame() {
     // Reset all game state
     gameState = {};
+    
+    // Reset tournament state
+    tournamentState.inProgress = false;
+    tournamentState.handNumber = 0;
+    tournamentState.eliminatedPlayers = [];
     
     // Clear UI
     actionLog.innerHTML = '';
@@ -177,6 +275,7 @@ function restartGame() {
     // Reset buttons
     startGameBtn.disabled = false;
     restartGameBtn.disabled = true;
+    nextHandBtn.disabled = true;
     nextMoveBtn.disabled = true;
     
     logAction("Game restarted! Player configurations preserved. Start when ready.");
@@ -184,10 +283,15 @@ function restartGame() {
 
 function startGame() {
     actionLog.innerHTML = '';
-    logAction("Starting a new game...");
+    logAction("Starting a new tournament...");
     startGameBtn.disabled = true;
     restartGameBtn.disabled = false;
     nextMoveBtn.disabled = false;
+    
+    // Initialize tournament
+    tournamentState.inProgress = true;
+    tournamentState.handNumber = 1;
+    tournamentState.eliminatedPlayers = [];
     
     const deck = createDeck();
     shuffleDeck(deck);
@@ -204,6 +308,7 @@ function startGame() {
             hasActed: false,
             isAllIn: false,
             hasFolded: false,
+            isEliminated: false,
         })),
         communityCards: [],
         pot: 0,
@@ -217,7 +322,7 @@ function startGame() {
     for (let i = 0; i < gameState.players.length; i++) {
         gameState.players[i].cards = [gameState.deck.pop(), gameState.deck.pop()];
     }
-    logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
+    logAction(`Hand ${tournamentState.handNumber} - ${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
     updateUI();
 }
 
@@ -238,7 +343,7 @@ async function handleNextTurn() {
 
         let currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
-        if (currentPlayer.hasFolded || (currentPlayer.isAllIn && currentPlayer.hasActed)) {
+        if (currentPlayer.hasFolded || currentPlayer.isEliminated || (currentPlayer.isAllIn && currentPlayer.hasActed)) {
             moveToNextPlayer();
             hideThinkingAnimation();
             if (!gameState.gameOver) {
@@ -302,13 +407,14 @@ function moveToNextPlayer() {
             return;
         }
     } while ((gameState.players[gameState.currentPlayerIndex].hasFolded || 
+              gameState.players[gameState.currentPlayerIndex].isEliminated ||
               (gameState.players[gameState.currentPlayerIndex].isAllIn && 
                gameState.players[gameState.currentPlayerIndex].hasActed)) && 
                attempts < maxAttempts);
 }
 
 function shouldEndRound() {
-     const activePlayers = gameState.players.filter(p => !p.hasFolded);
+     const activePlayers = gameState.players.filter(p => !p.hasFolded && !p.isEliminated);
      if (activePlayers.length <= 1) return true;
      const playersWhoCanAct = activePlayers.filter(p => !p.isAllIn);
      if (playersWhoCanAct.length === 0) return true;
@@ -391,7 +497,17 @@ async function handleShowdown() {
     
     gameState.gameOver = true;
     nextMoveBtn.disabled = true;
-    startGameBtn.disabled = false;
+    
+    // Check if tournament is in progress
+    if (tournamentState.inProgress) {
+        // Enable Next Hand button for tournament
+        nextHandBtn.disabled = false;
+        logAction("Hand complete! Click 'Next Hand' to continue the tournament.", 'analysis');
+    } else {
+        // Single game mode - enable start button
+        startGameBtn.disabled = false;
+    }
+    
     updateUI();
 }
 
@@ -588,6 +704,15 @@ async function endRoundByFold() {
         gameState.pot = 0;
         gameState.gameOver = true;
         nextMoveBtn.disabled = true;
-        startGameBtn.disabled = false;
+        
+        // Check if tournament is in progress
+        if (tournamentState.inProgress) {
+            // Enable Next Hand button for tournament
+            nextHandBtn.disabled = false;
+            logAction("Hand complete! Click 'Next Hand' to continue the tournament.", 'analysis');
+        } else {
+            // Single game mode - enable start button
+            startGameBtn.disabled = false;
+        }
     }
 }

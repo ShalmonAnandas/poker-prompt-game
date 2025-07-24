@@ -45,7 +45,10 @@ function updateUI(showdown = false) {
         el.cards.innerHTML = player.cards.map(card => renderCard(card, true)).join('');
         el.area.classList.toggle('active', index === gameState.currentPlayerIndex && !gameState.gameOver);
         
-        if (player.hasFolded) {
+        if (player.isEliminated) {
+            el.area.style.opacity = '0.3';
+            el.cards.innerHTML = '<div class="w-full h-full flex items-center justify-center text-lg font-bold text-red-600">ELIMINATED</div>';
+        } else if (player.hasFolded) {
             el.area.style.opacity = '0.5';
             el.cards.innerHTML = '<div class="w-full h-full flex items-center justify-center text-lg font-bold text-red-400">FOLDED</div>';
         } else {

@@ -3,6 +3,7 @@ const apiKeyInput = document.getElementById('apiKey');
 const toggleApiVisibilityBtn = document.getElementById('toggleApiVisibility');
 const startGameBtn = document.getElementById('startGameBtn');
 const restartGameBtn = document.getElementById('restartGameBtn');
+const nextHandBtn = document.getElementById('nextHandBtn');
 const nextMoveBtn = document.getElementById('nextMoveBtn');
 const nextMoveText = document.getElementById('nextMoveText');
 const thinkingAnimation = document.getElementById('thinkingAnimation');
@@ -25,6 +26,7 @@ startGameBtn.addEventListener('click', startGame);
 restartGameBtn.addEventListener('click', () => {
     restartGame();
 });
+nextHandBtn.addEventListener('click', startNextHand);
 nextMoveBtn.addEventListener('click', handleNextTurn);
 document.querySelectorAll('.generate-prompt-btn').forEach(btn => {
     btn.addEventListener('click', generateAIPersona);
