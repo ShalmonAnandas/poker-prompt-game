@@ -183,6 +183,8 @@ function postBlinds() {
     logAction(`${smallBlindPlayer.name} posts small blind of ${smallBlindAmount}`, 'analysis');
     logAction(`${bigBlindPlayer.name} posts big blind of ${bigBlindAmount}`, 'analysis');
 }
+
+function getRandomPersonalities() {
     // Shuffle the array and take first 7 for 8-player game
     const shuffled = [...PREMADE_PERSONALITIES].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 7);
