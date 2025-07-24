@@ -11,6 +11,12 @@ const actionLog = document.getElementById('actionLog');
 const potEl = document.getElementById('pot');
 const communityCardsEl = document.getElementById('community-cards');
 
+// UI Configuration Elements
+const togglePlayerConfigBtn = document.getElementById('togglePlayerConfig');
+const playerConfigSection = document.getElementById('playerConfigSection');
+const randomizeAllBtn = document.getElementById('randomizeAllBtn');
+const resetToDefaultsBtn = document.getElementById('resetToDefaultsBtn');
+
 const playerElements = Array.from({ length: 8 }, (_, i) => ({
     area: document.getElementById(`player-area-${i}`),
     cards: document.getElementById(`player-${i}-cards`),
@@ -28,6 +34,24 @@ restartGameBtn.addEventListener('click', () => {
 });
 nextHandBtn.addEventListener('click', startNextHand);
 nextMoveBtn.addEventListener('click', handleNextTurn);
+
+// UI Configuration Event Listeners
+togglePlayerConfigBtn.addEventListener('click', () => {
+    const isHidden = playerConfigSection.style.display === 'none';
+    playerConfigSection.style.display = isHidden ? 'block' : 'none';
+    togglePlayerConfigBtn.textContent = isHidden ? 'Hide Configuration' : 'Show Configuration';
+});
+
+randomizeAllBtn.addEventListener('click', () => {
+    personalitiesInitialized = false;
+    setPlayerPersonalities();
+});
+
+resetToDefaultsBtn.addEventListener('click', () => {
+    personalitiesInitialized = false;
+    initializePersonalitiesOnPageLoad();
+});
+
 document.querySelectorAll('.generate-prompt-btn').forEach(btn => {
     btn.addEventListener('click', generateAIPersona);
 });

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker Game Tests</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #1a1a1a; color: #fff; font-family: monospace; }
+        .console { background: #000; border: 1px solid #333; padding: 20px; border-radius: 8px; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">🎯 Poker Game Test Suite</h1>
+        
+        <div class="mb-6">
+            <button id="runTestsBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded">
+                ▶️ Run All Tests
+            </button>
+            <button id="clearConsoleBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded ml-4">
+                🗑️ Clear Console
+            </button>
+        </div>
+        
+        <div class="console" id="testConsole">
+            <div class="text-green-400">Ready to run tests...</div>
+        </div>
+    </div>
+
+    <script src="poker-logic.test.js"></script>
+    <script>
+        const testConsole = document.getElementById('testConsole');
+        const runTestsBtn = document.getElementById('runTestsBtn');
+        const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+        
+        // Override console methods to display in our custom console
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function addToConsole(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = type === 'error' ? 'text-red-400' : 'text-white';
+            div.textContent = message;
+            testConsole.appendChild(div);
+            testConsole.scrollTop = testConsole.scrollHeight;
+        }
+        
+        console.log = (...args) => {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.error = (...args) => {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+        
+        runTestsBtn.addEventListener('click', () => {
+            runTestsBtn.disabled = true;
+            runTestsBtn.textContent = '⏳ Running Tests...';
+            
+            setTimeout(() => {
+                const tests = new PokerTests();
+                const success = tests.runAll();
+                
+                runTestsBtn.disabled = false;
+                runTestsBtn.textContent = success ? '✅ Tests Passed' : '❌ Tests Failed';
+                runTestsBtn.className = success ? 
+                    'bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded' :
+                    'bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded';
+                    
+                setTimeout(() => {
+                    runTestsBtn.textContent = '▶️ Run All Tests';
+                    runTestsBtn.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded';
+                }, 3000);
+            }, 100);
+        });
+        
+        clearConsoleBtn.addEventListener('click', () => {
+            testConsole.innerHTML = '<div class="text-green-400">Console cleared...</div>';
+        });
+    </script>
+</body>
+</html>
