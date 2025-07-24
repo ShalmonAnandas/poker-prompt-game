@@ -12,7 +12,7 @@
     <div class="container mx-auto p-4 max-w-7xl">
         <header class="text-center mb-4">
             <h1 class="text-4xl font-bold text-white">Prompt Poker AI</h1>
-            <p class="text-gray-400">4-Player with Player Thinking</p>
+            <p class="text-gray-400">8-Player with Player Thinking</p>
         </header>
 
         <div class="mb-6 max-w-lg mx-auto">
@@ -29,7 +29,7 @@
             <div class="lg:col-span-3">
                 <div id="pokerTable" class="poker-table w-full max-w-4xl mx-auto">
                     <!-- Player Areas -->
-                    <div id="player-area-0" class="player-area player-area-bottom bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                    <div id="player-area-0" class="player-area player-area-position-0 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
                         <div class="flex items-center justify-center gap-3">
                             <div id="player-0-cards" class="flex gap-2"></div>
                             <div class="text-center">
@@ -39,7 +39,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="player-area-1" class="player-area player-area-left bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                    <div id="player-area-1" class="player-area player-area-position-1 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
                         <div class="flex items-center justify-center gap-3">
                             <div id="player-1-cards" class="flex gap-2"></div>
                             <div class="text-center">
@@ -49,7 +49,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="player-area-2" class="player-area player-area-top bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                    <div id="player-area-2" class="player-area player-area-position-2 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
                         <div class="flex items-center justify-center gap-3">
                             <div class="text-center">
                                 <h3 id="player-2-name" class="text-lg font-semibold">Player 3</h3>
@@ -59,7 +59,7 @@
                             <div id="player-2-cards" class="flex gap-2"></div>
                         </div>
                     </div>
-                    <div id="player-area-3" class="player-area player-area-right bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                    <div id="player-area-3" class="player-area player-area-position-3 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
                         <div class="flex items-center justify-center gap-3">
                             <div class="text-center">
                                 <h3 id="player-3-name" class="text-lg font-semibold">Player 4</h3>
@@ -67,6 +67,46 @@
                                 <div id="player-3-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
                             </div>
                              <div id="player-3-cards" class="flex gap-2"></div>
+                        </div>
+                    </div>
+                    <div id="player-area-4" class="player-area player-area-position-4 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="text-center">
+                                <h3 id="player-4-name" class="text-lg font-semibold">Player 5</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-4-chips">1000</span></div>
+                                <div id="player-4-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
+                             <div id="player-4-cards" class="flex gap-2"></div>
+                        </div>
+                    </div>
+                    <div id="player-area-5" class="player-area player-area-position-5 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div id="player-5-cards" class="flex gap-2"></div>
+                            <div class="text-center">
+                                <h3 id="player-5-name" class="text-lg font-semibold">Player 6</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-5-chips">1000</span></div>
+                                <div id="player-5-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="player-area-6" class="player-area player-area-position-6 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div id="player-6-cards" class="flex gap-2"></div>
+                            <div class="text-center">
+                                <h3 id="player-6-name" class="text-lg font-semibold">Player 7</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-6-chips">1000</span></div>
+                                <div id="player-6-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="player-area-7" class="player-area player-area-position-7 bg-gray-800/50 p-3 rounded-xl border-2 border-transparent transition-all duration-300">
+                        <div class="flex items-center justify-center gap-3">
+                            <div id="player-7-cards" class="flex gap-2"></div>
+                            <div class="text-center">
+                                <h3 id="player-7-name" class="text-lg font-semibold">Player 8</h3>
+                                <div class="chip-stack px-3 py-1 rounded-lg text-sm">Chips: <span id="player-7-chips">1000</span></div>
+                                <div id="player-7-bet" class="mt-1 text-yellow-400 font-semibold text-xs"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -85,6 +125,7 @@
                     <div class="flex flex-col gap-2 mb-6">
                         <button id="startGameBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Start New Game</button>
                         <button id="restartGameBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors" disabled>Restart Game</button>
+                        <button id="nextHandBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors" disabled>Next Hand</button>
                         <button id="nextMoveBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors relative overflow-hidden" disabled>
                             <span id="nextMoveText">Next AI Move</span>
                             <div id="thinkingAnimation" class="absolute inset-0 flex items-center justify-center bg-blue-600 hidden">
@@ -105,39 +146,99 @@
             </div>
         </div>
 
-        <!-- Player Prompts -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Player 1 Prompt -->
-            <div class="player-prompt-area">
-                <label class="block text-white text-sm font-bold mb-2">Player 1 Name</label>
-                <input type="text" id="player-0-name-input" value="Aggressive Andy" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
-                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
-                <textarea id="player-0-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">Always play aggressively. Raise if you have anything decent. Bluff often.</textarea>
-                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="0">✨ Generate</button>
+        <!-- Player Configuration Section -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-white">Player Configuration</h2>
+                <button id="togglePlayerConfig" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Hide Configuration
+                </button>
             </div>
-            <!-- Player 2 Prompt -->
-            <div class="player-prompt-area">
-                <label class="block text-white text-sm font-bold mb-2">Player 2 Name</label>
-                <input type="text" id="player-1-name-input" value="Cautious Carla" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
-                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
-                <textarea id="player-1-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">Be very cautious. Only play very strong hands like high pairs or better. Fold otherwise.</textarea>
-                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="1">✨ Generate</button>
-            </div>
-            <!-- Player 3 Prompt -->
-            <div class="player-prompt-area">
-                <label class="block text-white text-sm font-bold mb-2">Player 3 Name</label>
-                <input type="text" id="player-2-name-input" value="Bluffing Ben" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
-                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
-                <textarea id="player-2-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">You like to bluff. If the other players seem weak (checking or folding), try to steal the pot with a bet, even with a bad hand.</textarea>
-                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="2">✨ Generate</button>
-            </div>
-            <!-- Player 4 Prompt -->
-            <div class="player-prompt-area">
-                <label class="block text-white text-sm font-bold mb-2">Player 4 Name</label>
-                <input type="text" id="player-3-name-input" value="Thinking Tina" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2 mb-2 text-sm">
-                <label class="block text-white text-sm font-bold mb-2">Prompt</label>
-                <textarea id="player-3-prompt" class="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg p-2 text-sm">Play a balanced 'tight-aggressive' style. Play a narrow range of strong starting hands, but play them aggressively with bets and raises.</textarea>
-                <button class="generate-prompt-btn w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="3">✨ Generate</button>
+            
+            <div id="playerConfigSection" class="bg-gray-800/50 rounded-lg p-4 backdrop-blur-sm">
+                <div class="mb-4 flex gap-4">
+                    <button id="randomizeAllBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                        🎲 Randomize All Players
+                    </button>
+                    <button id="resetToDefaultsBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                        🔄 Reset to Defaults
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    <!-- Player 1 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">P1</span>
+                            <input type="text" id="player-0-name-input" value="Aggressive Andy" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-0-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">Always play aggressively. Raise if you have anything decent. Bluff often.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="0">✨</button>
+                    </div>
+                    <!-- Player 2 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">P2</span>
+                            <input type="text" id="player-1-name-input" value="Cautious Carla" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-1-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">Be very cautious. Only play very strong hands like high pairs or better. Fold otherwise.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="1">✨</button>
+                    </div>
+                    <!-- Player 3 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">P3</span>
+                            <input type="text" id="player-2-name-input" value="Bluffing Ben" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-2-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">You like to bluff. If the other players seem weak (checking or folding), try to steal the pot with a bet, even with a bad hand.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="2">✨</button>
+                    </div>
+                    <!-- Player 4 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">P4</span>
+                            <input type="text" id="player-3-name-input" value="Thinking Tina" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-3-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">Play a balanced 'tight-aggressive' style. Play a narrow range of strong starting hands, but play them aggressively with bets and raises.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="3">✨</button>
+                    </div>
+                    <!-- Player 5 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">P5</span>
+                            <input type="text" id="player-4-name-input" value="Wild West Wendy" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-4-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">You're unpredictable and chaotic. Mix up your play constantly - sometimes ultra-tight, sometimes ultra-loose. Keep everyone on their toes.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="4">✨</button>
+                    </div>
+                    <!-- Player 6 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">P6</span>
+                            <input type="text" id="player-5-name-input" value="Mathematical Mike" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-5-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">You're a mathematician who calculates odds meticulously. Only bet when you have a statistical advantage. Fold weak hands immediately.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="5">✨</button>
+                    </div>
+                    <!-- Player 7 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">P7</span>
+                            <input type="text" id="player-6-name-input" value="Lucky Lucy" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-6-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">You believe in luck and intuition. Play hands that 'feel' right, even if they're not mathematically strong. Trust your gut instincts.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="6">✨</button>
+                    </div>
+                    <!-- Player 8 Prompt -->
+                    <div class="player-prompt-area bg-gray-700/50 p-3 rounded-lg border-2 border-yellow-500/50">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-yellow-400 font-bold text-sm">YOU</span>
+                            <input type="text" id="player-7-name-input" value="Custom Player" class="flex-1 bg-gray-600 border border-gray-500 rounded p-1 text-xs">
+                        </div>
+                        <textarea id="player-7-prompt" class="w-full h-16 bg-gray-600 border border-gray-500 rounded p-1 text-xs resize-none">Play your own unique style. Be creative and unpredictable.</textarea>
+                        <button class="generate-prompt-btn w-full mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 text-xs rounded" data-player-index="7">✨</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -32,6 +32,20 @@ function updateUI(showdown = false) {
         const el = playerElements[index];
         el.chips.textContent = player.chips;
         
+        // Clear previous position classes
+        el.area.classList.remove('dealer', 'small-blind', 'big-blind');
+        
+        // Add position indicators
+        if (gameState.dealerIndex === index) {
+            el.area.classList.add('dealer');
+        }
+        if (gameState.smallBlindIndex === index) {
+            el.area.classList.add('small-blind');
+        }
+        if (gameState.bigBlindIndex === index) {
+            el.area.classList.add('big-blind');
+        }
+        
         // Animate chip changes
         if (player.bet > 0) {
             el.bet.textContent = `Bet: ${player.bet}`;
@@ -45,7 +59,10 @@ function updateUI(showdown = false) {
         el.cards.innerHTML = player.cards.map(card => renderCard(card, true)).join('');
         el.area.classList.toggle('active', index === gameState.currentPlayerIndex && !gameState.gameOver);
         
-        if (player.hasFolded) {
+        if (player.isEliminated) {
+            el.area.style.opacity = '0.3';
+            el.cards.innerHTML = '<div class="w-full h-full flex items-center justify-center text-lg font-bold text-red-600">ELIMINATED</div>';
+        } else if (player.hasFolded) {
             el.area.style.opacity = '0.5';
             el.cards.innerHTML = '<div class="w-full h-full flex items-center justify-center text-lg font-bold text-red-400">FOLDED</div>';
         } else {

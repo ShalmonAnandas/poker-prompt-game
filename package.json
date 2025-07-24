@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "python -m http.server 8000",
     "build": "echo 'Static site - no build needed'",
-    "start": "python -m http.server 8000"
+    "start": "python -m http.server 8000",
+    "test": "echo 'Open tests/test-runner.html in browser to run tests'"
   },
   "keywords": [
     "poker",

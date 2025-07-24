@@ -61,15 +61,21 @@ function getGameStateForPrompt(player) {
 
 async function getAIThoughtProcess(player) {
     const gameStatePrompt = getGameStateForPrompt(player);
-    const thoughtPrompt = `You are the poker player ${player.name}. Your persona is: "${player.prompt}".
+    const thoughtPrompt = `You are the poker player ${player.name}. 
+    
+    YOUR CORE PERSONALITY: "${player.prompt}"
+    
+    IMPORTANT: Stay true to your character throughout the entire game. Never deviate from your established personality traits and playing style.
+    
     ${gameStatePrompt}
-    Based on this, what is your thought process for your next move? Explain your reasoning in one or two concise sentences.`;
+    
+    Based on your established personality and this game state, what is your thought process for your next move? Explain your reasoning in one or two concise sentences while staying completely in character as ${player.name}.`;
     
     try {
         return await callGeminiAPI(thoughtPrompt);
     } catch (error) {
         console.error('Error getting thought process:', error);
-        return "The AI is having trouble thinking right now.";
+        return `${player.name} is having trouble thinking right now.`;
     }
 }
 
@@ -77,24 +83,36 @@ async function getAIMove(player) {
     const gameStatePrompt = getGameStateForPrompt(player);
     const canCheck = (gameState.currentBet - player.bet) <= 0;
     const callAmount = gameState.currentBet - player.bet;
-    const maxBet = Math.min(player.chips, gameState.currentBet + 100); // Reasonable max bet
+    const minRaise = gameState.currentBet + BIG_BLIND; // Minimum raise is one big blind
+    const maxBet = player.chips;
     
-    const movePrompt = `You are a Texas Hold'em poker player. Your persona: "${player.prompt}".
+    const movePrompt = `You are a Texas Hold'em poker player named ${player.name}.
+    
+    YOUR CORE PERSONALITY AND PLAYING STYLE: "${player.prompt}"
+    
+    CRITICAL: You must ALWAYS play according to your established personality. Never change your playing style or deviate from your character traits.
+    
     ${gameStatePrompt}
     
-    Available Actions:
-    - "fold" (lose your hand)
-    ${canCheck ? '- "check" (no bet, see next card)' : ''}
-    ${callAmount > 0 ? `- "call" (match bet of ${callAmount})` : ''}
-    - "bet [amount]" (bet between 1 and ${player.chips})
-    - "raise [amount]" (increase bet, min ${gameState.currentBet + 1}, max ${maxBet})
+    ACTIONS AVAILABLE:
+    1. FOLD - Give up your hand (respond with: {"action": "FOLD"})
+    ${canCheck ? '2. CHECK - No bet required (respond with: {"action": "CHECK"})' : ''}
+    ${callAmount > 0 ? `3. CALL - Match bet of ${callAmount} (respond with: {"action": "CALL"})` : ''}
+    4. BET - Make first bet in round (respond with: {"action": "BET", "amount": [1-${maxBet}]})
+    5. RAISE - Increase existing bet (respond with: {"action": "RAISE", "amount": [${minRaise}-${maxBet}]})
     
-    IMPORTANT: You MUST respond in valid JSON format. Examples:
-    {"action": "fold"}
-    {"action": "check"}  
-    {"action": "call"}
-    {"action": "bet", "amount": 50}
-    {"action": "raise", "amount": 100}`;
+    CRITICAL INSTRUCTIONS:
+    - You MUST respond with EXACT JSON format using CAPITAL action names
+    - Use only these action words: FOLD, CHECK, CALL, BET, RAISE
+    - For BET/RAISE, include valid "amount" field
+    - Current persona: ${player.name} - ${player.prompt}
+    
+    EXAMPLES:
+    {"action": "FOLD"}
+    {"action": "CHECK"}  
+    {"action": "CALL"}
+    {"action": "BET", "amount": 50}
+    {"action": "RAISE", "amount": 100}`;
     
     try {
         const responseText = await callGeminiAPI(movePrompt, true);
@@ -104,34 +122,69 @@ async function getAIMove(player) {
             move = JSON.parse(responseText);
         } catch (parseError) {
             console.warn('Failed to parse AI response, trying to extract action:', responseText);
-            // Fallback parsing for non-JSON responses
-            const lowerResponse = responseText.toLowerCase();
-            if (lowerResponse.includes('fold')) move = { action: 'fold' };
-            else if (lowerResponse.includes('check') && canCheck) move = { action: 'check' };
-            else if (lowerResponse.includes('call')) move = { action: 'call' };
-            else move = { action: canCheck ? 'check' : 'call' };
+            // Improved fallback parsing with more specific patterns
+            const upperResponse = responseText.toUpperCase();
+            
+            if (upperResponse.includes('FOLD')) {
+                move = { action: 'FOLD' };
+            } else if (upperResponse.includes('CHECK') && canCheck) {
+                move = { action: 'CHECK' };
+            } else if (upperResponse.includes('CALL')) {
+                move = { action: 'CALL' };
+            } else if (upperResponse.includes('RAISE')) {
+                // Try to extract amount
+                const amountMatch = responseText.match(/(\d+)/);
+                const amount = amountMatch ? Math.min(parseInt(amountMatch[1]), maxBet) : minRaise;
+                move = { action: 'RAISE', amount };
+            } else if (upperResponse.includes('BET')) {
+                // Try to extract amount
+                const amountMatch = responseText.match(/(\d+)/);
+                const amount = amountMatch ? Math.min(parseInt(amountMatch[1]), maxBet) : BIG_BLIND;
+                move = { action: 'BET', amount };
+            } else {
+                // Ultimate fallback
+                move = { action: canCheck ? 'CHECK' : 'CALL' };
+            }
         }
         
         // Validate and sanitize the move
-        const validActions = ['fold', 'check', 'call', 'bet', 'raise'];
+        const validActions = ['FOLD', 'CHECK', 'CALL', 'BET', 'RAISE'];
         if (!validActions.includes(move.action)) {
-            return { action: canCheck ? 'check' : 'call' };
+            console.warn(`Invalid action ${move.action}, defaulting to safe action`);
+            return { action: canCheck ? 'CHECK' : 'CALL' };
         }
         
+        // Convert to lowercase for internal processing
+        move.action = move.action.toLowerCase();
+        
+        // Validate betting amounts
         if ((move.action === 'bet' || move.action === 'raise')) {
             if (!move.amount || move.amount <= 0 || move.amount > player.chips) {
+                console.warn(`Invalid amount ${move.amount}, defaulting to safe action`);
                 return { action: canCheck ? 'check' : 'call' };
             }
-            // Ensure minimum raise
-            if (move.action === 'raise' && move.amount <= gameState.currentBet) {
-                move.amount = Math.min(gameState.currentBet + 10, player.chips);
+            
+            // Ensure minimum raise for raise action
+            if (move.action === 'raise' && move.amount < minRaise) {
+                move.amount = Math.min(minRaise, player.chips);
             }
+            
+            // Ensure bet is at least the big blind
+            if (move.action === 'bet' && move.amount < BIG_BLIND) {
+                move.amount = Math.min(BIG_BLIND, player.chips);
+            }
+        }
+        
+        // Validate check action
+        if (move.action === 'check' && !canCheck) {
+            console.warn(`Player tried to check when they can't, defaulting to call`);
+            return { action: 'call' };
         }
         
         return move;
     } catch (error) {
         console.error('Error in getAIMove:', error);
-        // Safe fallback - always fold on critical errors
+        // Safe fallback - fold on critical errors to prevent hangs
         return { action: 'fold' };
     }
 }
