@@ -1,5 +1,6 @@
 // --- GAME STATE ---
 let gameState = {};
+let personalitiesInitialized = false;
 
 // Initialize side pot system
 function initializeSidePots() {
@@ -129,6 +130,14 @@ function setPlayerPersonalities() {
     if (!playerElements[3].prompt.value.trim()) {
         playerElements[3].prompt.value = "Play your own unique style. Be creative and unpredictable.";
     }
+    
+    personalitiesInitialized = true;
+}
+
+function initializePersonalitiesOnPageLoad() {
+    if (!personalitiesInitialized) {
+        setPlayerPersonalities();
+    }
 }
 // --- GAME LOGIC ---
 function createDeck() { 
@@ -170,10 +179,7 @@ function restartGame() {
     restartGameBtn.disabled = true;
     nextMoveBtn.disabled = true;
     
-    // Generate new personalities
-    setPlayerPersonalities();
-    
-    logAction("Game restarted! New personalities generated. Configure and start when ready.");
+    logAction("Game restarted! Player configurations preserved. Start when ready.");
 }
 
 function startGame() {
@@ -182,11 +188,6 @@ function startGame() {
     startGameBtn.disabled = true;
     restartGameBtn.disabled = false;
     nextMoveBtn.disabled = false;
-    
-    // Set random personalities if this is the first game
-    if (!gameState.players) {
-        setPlayerPersonalities();
-    }
     
     const deck = createDeck();
     shuffleDeck(deck);

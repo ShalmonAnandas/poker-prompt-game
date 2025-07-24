@@ -47,4 +47,5 @@ function hideThinkingAnimation() {
 }
 
 // Initialize UI
+initializePersonalitiesOnPageLoad();
 updateUI();
