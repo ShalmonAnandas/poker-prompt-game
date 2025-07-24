@@ -4,7 +4,8 @@ let personalitiesInitialized = false;
 let tournamentState = {
     inProgress: false,
     handNumber: 0,
-    eliminatedPlayers: []
+    eliminatedPlayers: [],
+    dealerPosition: 0  // Track dealer button position
 };
 
 // Initialize side pot system
@@ -46,6 +47,8 @@ function handleAllInScenario() {
 const SUITS = ['♥', '♦', '♣', '♠'];
 const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 const STARTING_CHIPS = 1000;
+const SMALL_BLIND = 10;
+const BIG_BLIND = 20;
 
 // --- PREMADE PERSONALITIES ---
 const PREMADE_PERSONALITIES = [
@@ -112,7 +115,74 @@ const PREMADE_PERSONALITIES = [
 ];
 
 // --- UTILITY FUNCTIONS ---
-function getRandomPersonalities() {
+function getNextActivePlayerIndex(startIndex) {
+    let index = startIndex;
+    const activePlayers = gameState.players.filter(p => !p.isEliminated);
+    if (activePlayers.length <= 1) return startIndex;
+    
+    for (let i = 0; i < gameState.players.length; i++) {
+        index = (index + 1) % gameState.players.length;
+        if (!gameState.players[index].isEliminated) {
+            return index;
+        }
+    }
+    return startIndex;
+}
+
+function postBlinds() {
+    const activePlayers = gameState.players.filter(p => !p.isEliminated);
+    if (activePlayers.length < 2) return;
+    
+    // Get positions for dealer, small blind, and big blind
+    let dealerIndex = tournamentState.dealerPosition;
+    
+    // Ensure dealer is active
+    while (gameState.players[dealerIndex].isEliminated) {
+        dealerIndex = getNextActivePlayerIndex(dealerIndex);
+    }
+    tournamentState.dealerPosition = dealerIndex;
+    
+    let smallBlindIndex, bigBlindIndex;
+    
+    if (activePlayers.length === 2) {
+        // Heads-up: dealer posts small blind
+        smallBlindIndex = dealerIndex;
+        bigBlindIndex = getNextActivePlayerIndex(dealerIndex);
+    } else {
+        // Normal play: first player after dealer is small blind
+        smallBlindIndex = getNextActivePlayerIndex(dealerIndex);
+        bigBlindIndex = getNextActivePlayerIndex(smallBlindIndex);
+    }
+    
+    // Post small blind
+    const smallBlindPlayer = gameState.players[smallBlindIndex];
+    const smallBlindAmount = Math.min(SMALL_BLIND, smallBlindPlayer.chips);
+    smallBlindPlayer.chips -= smallBlindAmount;
+    smallBlindPlayer.bet = smallBlindAmount;
+    if (smallBlindPlayer.chips === 0) smallBlindPlayer.isAllIn = true;
+    
+    // Post big blind
+    const bigBlindPlayer = gameState.players[bigBlindIndex];
+    const bigBlindAmount = Math.min(BIG_BLIND, bigBlindPlayer.chips);
+    bigBlindPlayer.chips -= bigBlindAmount;
+    bigBlindPlayer.bet = bigBlindAmount;
+    if (bigBlindPlayer.chips === 0) bigBlindPlayer.isAllIn = true;
+    
+    // Set current bet to big blind amount
+    gameState.currentBet = bigBlindAmount;
+    
+    // Set starting position for betting (first player after big blind)
+    gameState.currentPlayerIndex = getNextActivePlayerIndex(bigBlindIndex);
+    
+    // Mark positions for UI display
+    gameState.dealerIndex = dealerIndex;
+    gameState.smallBlindIndex = smallBlindIndex;
+    gameState.bigBlindIndex = bigBlindIndex;
+    
+    logAction(`Dealer: ${gameState.players[dealerIndex].name}`, 'analysis');
+    logAction(`${smallBlindPlayer.name} posts small blind of ${smallBlindAmount}`, 'analysis');
+    logAction(`${bigBlindPlayer.name} posts big blind of ${bigBlindAmount}`, 'analysis');
+}
     // Shuffle the array and take first 7 for 8-player game
     const shuffled = [...PREMADE_PERSONALITIES].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, 7);
@@ -181,21 +251,12 @@ function startNextHand() {
     
     // Start next hand
     tournamentState.handNumber++;
+    
+    // Advance dealer button to next active player
+    tournamentState.dealerPosition = getNextActivePlayerIndex(tournamentState.dealerPosition);
+    
     const deck = createDeck();
     shuffleDeck(deck);
-    
-    // Reset hand-specific state for active players
-    gameState.players.forEach(player => {
-        if (!player.isEliminated) {
-            player.cards = [deck.pop(), deck.pop()];
-            player.bet = 0;
-            player.hasActed = false;
-            player.isAllIn = false;
-            player.hasFolded = false;
-        } else {
-            player.cards = [];
-        }
-    });
     
     // Reset game state for new hand
     gameState.deck = deck;
@@ -207,10 +268,15 @@ function startNextHand() {
     gameState.gamePhase = 'pre-flop';
     gameState.gameOver = false;
     
-    // Find first active player to start
-    while (gameState.players[gameState.currentPlayerIndex].isEliminated) {
-        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
-    }
+    // Deal cards to active players
+    gameState.players.forEach(player => {
+        if (!player.isEliminated) {
+            player.cards = [deck.pop(), deck.pop()];
+        }
+    });
+    
+    // Post blinds and set starting position
+    postBlinds();
     
     logAction(`Hand ${tournamentState.handNumber} begins! ${activePlayers.length} players remaining.`, 'analysis');
     logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
@@ -255,6 +321,7 @@ function restartGame() {
     tournamentState.inProgress = false;
     tournamentState.handNumber = 0;
     tournamentState.eliminatedPlayers = [];
+    tournamentState.dealerPosition = 0;
     
     // Clear UI
     actionLog.innerHTML = '';
@@ -292,6 +359,7 @@ function startGame() {
     tournamentState.inProgress = true;
     tournamentState.handNumber = 1;
     tournamentState.eliminatedPlayers = [];
+    tournamentState.dealerPosition = Math.floor(Math.random() * 8); // Random starting dealer
     
     const deck = createDeck();
     shuffleDeck(deck);
@@ -322,6 +390,10 @@ function startGame() {
     for (let i = 0; i < gameState.players.length; i++) {
         gameState.players[i].cards = [gameState.deck.pop(), gameState.deck.pop()];
     }
+    
+    // Post blinds
+    postBlinds();
+    
     logAction(`Hand ${tournamentState.handNumber} - ${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
     updateUI();
 }
@@ -416,8 +488,15 @@ function moveToNextPlayer() {
 function shouldEndRound() {
      const activePlayers = gameState.players.filter(p => !p.hasFolded && !p.isEliminated);
      if (activePlayers.length <= 1) return true;
+     
      const playersWhoCanAct = activePlayers.filter(p => !p.isAllIn);
+     
+     // If all players are all-in, we should automatically deal to showdown
      if (playersWhoCanAct.length === 0) return true;
+     
+     // If only one player can act and all others are all-in, and that player has acted
+     if (playersWhoCanAct.length === 1 && playersWhoCanAct[0].hasActed) return true;
+     
      const allActed = playersWhoCanAct.every(p => p.hasActed);
      const betsEqual = playersWhoCanAct.every(p => p.bet === gameState.currentBet);
      return allActed && betsEqual;
@@ -427,9 +506,31 @@ async function endRoundAndProceed() {
     logAction("Betting round concluded.", "analysis");
     collectBets();
     gameState.players.forEach(p => { if (!p.hasFolded && !p.isAllIn) p.hasActed = false; });
+    
     const nextPhaseMap = { 'pre-flop': 'flop', 'flop': 'turn', 'turn': 'river', 'river': 'showdown' };
     const cardsToDeal = { 'flop': 3, 'turn': 1, 'river': 1 };
     const nextPhase = nextPhaseMap[gameState.gamePhase];
+    
+    // Check if all remaining players are all-in - if so, deal all remaining cards to showdown
+    const activePlayers = gameState.players.filter(p => !p.hasFolded && !p.isEliminated);
+    const playersWhoCanAct = activePlayers.filter(p => !p.isAllIn);
+    
+    if (playersWhoCanAct.length === 0 && activePlayers.length > 1) {
+        // All players are all-in, deal straight to showdown
+        logAction("All players are all-in. Dealing remaining cards to showdown.", "analysis");
+        
+        // Deal all remaining community cards at once
+        while (gameState.communityCards.length < 5 && gameState.deck.length > 0) {
+            gameState.communityCards.push(gameState.deck.pop());
+        }
+        
+        gameState.gamePhase = 'showdown';
+        logAction("All community cards dealt. Proceeding to showdown.", "analysis");
+        updateUI();
+        await handleShowdown();
+        return;
+    }
+    
     gameState.gamePhase = nextPhase;
     if (cardsToDeal[nextPhase]) {
         dealCommunityCards(cardsToDeal[nextPhase]);
@@ -437,8 +538,17 @@ async function endRoundAndProceed() {
         updateUI();
         gameState.currentBet = 0;
         gameState.players.forEach(p => p.bet = 0);
+        
+        // Find next player who can act
         moveToNextPlayer();
-        logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
+        
+        // If no one can act after dealing, proceed to next phase
+        if (playersWhoCanAct.length === 0) {
+            logAction("No players can act. Automatically proceeding to next phase.", "analysis");
+            setTimeout(() => endRoundAndProceed(), 1000);
+        } else {
+            logAction(`${gameState.players[gameState.currentPlayerIndex].name}'s turn to act.`);
+        }
     } else if (nextPhase === 'showdown') {
         await handleShowdown();
     }

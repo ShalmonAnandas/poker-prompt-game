@@ -32,6 +32,20 @@ function updateUI(showdown = false) {
         const el = playerElements[index];
         el.chips.textContent = player.chips;
         
+        // Clear previous position classes
+        el.area.classList.remove('dealer', 'small-blind', 'big-blind');
+        
+        // Add position indicators
+        if (gameState.dealerIndex === index) {
+            el.area.classList.add('dealer');
+        }
+        if (gameState.smallBlindIndex === index) {
+            el.area.classList.add('small-blind');
+        }
+        if (gameState.bigBlindIndex === index) {
+            el.area.classList.add('big-blind');
+        }
+        
         // Animate chip changes
         if (player.bet > 0) {
             el.bet.textContent = `Bet: ${player.bet}`;
