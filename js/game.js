@@ -270,9 +270,14 @@ function startNextHand() {
     gameState.gamePhase = 'pre-flop';
     gameState.gameOver = false;
     
-    // Deal cards to active players
+    // Reset player states and deal cards to active players
     gameState.players.forEach(player => {
         if (!player.isEliminated) {
+            // Reset player state for new hand
+            player.hasFolded = false;
+            player.hasActed = false;
+            player.isAllIn = false;
+            player.bet = 0;
             player.cards = [deck.pop(), deck.pop()];
         }
     });
